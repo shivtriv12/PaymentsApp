@@ -36,3 +36,16 @@ const UserSchema:Schema<User> = new mongoose.Schema({
     }
 });
 export const userModel = model("User",UserSchema);
+
+const AccountSchema = new Schema({
+    balance:{
+        type:Number,
+        required:true
+    },
+    userId:{
+        type:Schema.Types.ObjectId,
+        ref:"User",
+        required:true
+    }
+});
+export const accountModel = model("Account",AccountSchema);
