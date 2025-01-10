@@ -32,20 +32,18 @@ exports.userRouter.post("/signup", (req, res) => __awaiter(void 0, void 0, void 
     try {
         const { username, password, firstname, lastname } = exports.signupSchema.parse(req.body);
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
-        yield db_1.userModel.create({
+        const user = yield db_1.userModel.create({
             username: username,
             password: hashedPassword,
             firstname: firstname,
             lastname: lastname
         });
-        const jwtToken = jsonwebtoken_1.default.sign({
-            username: username
-        }, process.env.JWT_SECRET || "", {
-            expiresIn: '1d'
+        yield db_1.accountModel.create({
+            userId: user._id,
+            balance: Math.floor(Math.random() * 10000 + 1)
         });
         res.status(200).json({
             message: "User signed up successfully",
-            jwt: jwtToken
         });
     }
     catch (error) {
