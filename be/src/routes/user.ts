@@ -1,7 +1,7 @@
 import express from "express";
 import bcrypt from "bcrypt";
 import { z, ZodError } from "zod";
-import { userModel } from "../db";
+import { accountModel, userModel } from "../db";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { authMiddleware } from "../middleware";
@@ -21,22 +21,18 @@ userRouter.post("/signup",async (req,res)=>{
         const {username,password,firstname,lastname} = signupSchema.parse(req.body);
         const hashedPassword = await bcrypt.hash(password,10);
         
-        await userModel.create({
+        const user=await userModel.create({
             username:username,
             password:hashedPassword,
             firstname:firstname,
             lastname:lastname
         });
-
-        const jwtToken:string = jwt.sign({
-            username:username
-        },process.env.JWT_SECRET||"",{
-            expiresIn:'1d'
+        await accountModel.create({
+            userId:user._id,
+            balance: Math.floor(Math.random()*10000+1)
         });
-
         res.status(200).json({
             message:"User signed up successfully",
-            jwt:jwtToken
         });
 
     } catch (error) {
@@ -146,4 +142,3 @@ userRouter.get("/bulk",authMiddleware,async(req,res)=>{
         });
     }
 });
-
