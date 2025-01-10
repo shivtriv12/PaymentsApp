@@ -19,6 +19,7 @@ const zod_1 = require("zod");
 const db_1 = require("../db");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const middleware_1 = require("../middleware");
 exports.userRouter = express_1.default.Router();
 dotenv_1.default.config();
 exports.signupSchema = zod_1.z.object({
@@ -30,7 +31,7 @@ exports.signupSchema = zod_1.z.object({
 exports.userRouter.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password, firstname, lastname } = exports.signupSchema.parse(req.body);
-        const hashedPassword = bcrypt_1.default.hash(password, 10);
+        const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         yield db_1.userModel.create({
             username: username,
             password: hashedPassword,
@@ -55,17 +56,18 @@ exports.userRouter.post("/signup", (req, res) => __awaiter(void 0, void 0, void 
         }
         else if (error.code === 11000) {
             res.status(400).json({
-                message: "User already exists",
+                message: "User with same username already exists",
             });
         }
         else {
+            console.log(error);
             res.status(500).json({
                 message: "Internal server error",
             });
         }
     }
 }));
-exports.userRouter.post("/sigin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.userRouter.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { username, password } = req.body;
         const user = yield db_1.userModel.findOne({ username });
@@ -90,9 +92,60 @@ exports.userRouter.post("/sigin", (req, res) => __awaiter(void 0, void 0, void 0
         }
         else {
             res.status(400).json({
-                message: "User not signed in"
+                message: "User not signed up"
             });
         }
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "internal Server Error"
+        });
+    }
+}));
+const updateBody = zod_1.z.object({
+    password: zod_1.z.string().optional(),
+    firstname: zod_1.z.string().optional(),
+    lastname: zod_1.z.string().optional(),
+});
+exports.userRouter.put("/", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { success } = updateBody.safeParse(req.body);
+        if (!success) {
+            res.status(411).json({
+                message: "Error while updating information"
+            });
+        }
+        yield db_1.userModel.updateOne({ username: req.username }, req.body);
+        res.json({
+            message: "Updated successfully"
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            message: "internal Server Error"
+        });
+    }
+}));
+exports.userRouter.get("/bulk", middleware_1.authMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const name = req.query.filter || "";
+        const users = yield db_1.userModel.find({
+            $or: [
+                {
+                    firstname: { "$regex": name }
+                },
+                {
+                    lastname: { "$regex": name }
+                }
+            ]
+        });
+        res.json({
+            user: users.map(user => ({
+                username: user.username,
+                firstname: user.firstname,
+                lastname: user.lastname
+            }))
+        });
     }
     catch (error) {
         res.status(500).json({

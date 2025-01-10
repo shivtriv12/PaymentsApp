@@ -95,7 +95,55 @@ userRouter.post("/signin",async (req,res)=>{
     }
 });
 
-userRouter.put("/",authMiddleware,async (req,res)=>{
-    const {firstname,lastname,password} = req.body();
-    
+const updateBody = z.object({
+	password: z.string().optional(),
+    firstname: z.string().optional(),
+    lastname: z.string().optional(),
 });
+
+userRouter.put("/",authMiddleware,async (req,res)=>{
+    try {
+        const {success} = updateBody.safeParse(req.body);
+        if (!success) {
+            res.status(411).json({
+                message: "Error while updating information"
+            });
+        }
+        await userModel.updateOne({ username: req.username }, req.body);
+        res.json({
+            message: "Updated successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            message:"internal Server Error"
+        });
+    }
+});
+
+userRouter.get("/bulk",authMiddleware,async(req,res)=>{
+    try {
+        const name = req.query.filter || "";
+        const users = await userModel.find({
+            $or:[
+                {
+                    firstname:{"$regex":name}
+                },
+                {
+                    lastname:{"$regex":name}
+                }
+            ]
+        });
+        res.json({
+            user:users.map(user=>({
+                username:user.username,
+                firstname:user.firstname,
+                lastname:user.lastname
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({
+            message:"internal Server Error"
+        });
+    }
+});
+
