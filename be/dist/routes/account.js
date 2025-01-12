@@ -55,8 +55,11 @@ exports.accountRouter.post("/transfer", middleware_1.authMiddleware, (req, res) 
                 message: "Insufficient balance"
             });
         }
+        const receiverUser = yield db_1.userModel.findOne({
+            username: to
+        }).session(session);
         const recevierAccount = yield db_1.accountModel.findOne({
-            userId: to
+            userId: receiverUser === null || receiverUser === void 0 ? void 0 : receiverUser._id
         }).session(session);
         if (!recevierAccount) {
             yield session.abortTransaction();
@@ -65,9 +68,9 @@ exports.accountRouter.post("/transfer", middleware_1.authMiddleware, (req, res) 
             });
         }
         yield db_1.accountModel.updateOne({ userId: senderUser === null || senderUser === void 0 ? void 0 : senderUser._id }, { $inc: { balance: -amount } }).session(session);
-        yield db_1.accountModel.updateOne({ userId: to }, { $inc: { balance: amount } }).session(session);
+        yield db_1.accountModel.updateOne({ userId: receiverUser === null || receiverUser === void 0 ? void 0 : receiverUser._id }, { $inc: { balance: amount } }).session(session);
         yield session.commitTransaction();
-        res.json({
+        res.status(200).json({
             message: "Transfer successful"
         });
     }

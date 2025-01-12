@@ -44,8 +44,11 @@ accountRouter.post("/transfer",authMiddleware,async(req,res)=>{
                 message: "Insufficient balance"
             });
         }
+        const receiverUser = await userModel.findOne({
+            username:to
+        }).session(session);
         const recevierAccount = await accountModel.findOne({
-            userId:to
+            userId:receiverUser?._id
         }).session(session);
         if (!recevierAccount) {
             await session.abortTransaction();
@@ -55,9 +58,9 @@ accountRouter.post("/transfer",authMiddleware,async(req,res)=>{
         }
 
         await accountModel.updateOne({ userId: senderUser?._id }, { $inc: { balance: -amount } }).session(session);
-        await accountModel.updateOne({ userId: to }, { $inc: { balance: amount } }).session(session);
+        await accountModel.updateOne({ userId: receiverUser?._id }, { $inc: { balance: amount } }).session(session);
         await session.commitTransaction();
-        res.json({
+        res.status(200).json({
             message: "Transfer successful"
         });
 
@@ -67,4 +70,4 @@ accountRouter.post("/transfer",authMiddleware,async(req,res)=>{
         });
         console.log(error);
     }
-})
+});

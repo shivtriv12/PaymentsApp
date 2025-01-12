@@ -120,13 +120,14 @@ userRouter.get("/bulk",authMiddleware,async(req,res)=>{
     try {
         const name = req.query.filter || "";
         const users = await userModel.find({
-            $or:[
+            $and: [
                 {
-                    firstname:{"$regex":name}
+                    $or: [
+                        { firstname: { "$regex": name, "$options": "i" } },
+                        { lastname: { "$regex": name, "$options": "i" } }
+                    ]
                 },
-                {
-                    lastname:{"$regex":name}
-                }
+                { username: { "$ne": req.username } }
             ]
         });
         res.json({

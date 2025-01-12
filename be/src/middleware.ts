@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export function authMiddleware(req:express.Request,res:express.Response,next:express.NextFunction):void{
-    const authHeader = req.headers.authorization as string;
+    const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         res.status(400).json({message:"User not logged in"});
         return;
