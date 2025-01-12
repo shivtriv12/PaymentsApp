@@ -34,7 +34,6 @@ A simple dummy payments application that allows users to search for other users 
    cd be
    npm install
    
-
 3. **Install Frontend Dependencies:**
 
    ```bash
@@ -42,13 +41,14 @@ A simple dummy payments application that allows users to search for other users 
    npm install
 
 4. **Start the Backend Server:**
+
   ```bash
    npm run start
 
 5. **Start the Frontend Server:**
+
   ```bash
    npm run dev
-
 
 ### Frontend Routes
 
