@@ -42,12 +42,12 @@ A simple dummy payments application that allows users to search for other users 
 
 4. **Start the Backend Server:**
 
-  ```bash
+   ```bash
    npm run start
 
 5. **Start the Frontend Server:**
 
-  ```bash
+   ```bash
    npm run dev
 
 ### Frontend Routes
